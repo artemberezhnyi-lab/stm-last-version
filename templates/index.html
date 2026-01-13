@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PWM Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="author" content="PWM Solutions">
+    <meta name="description" content="Professional PWM Generator Application">
+</head>
+<body>
+    <!-- Car-style header with status indicators -->
+    <div class="car-header">
+        <div class="header-left">
+        </div>
+        <div class="header-center">
+            <div class="app-title">PWM Generator</div>
+            <div class="app-subtitle">Pulse Width Modulation Control</div>
+        </div>
+        <div class="header-right">
+        </div>
+    </div>
+
+    <!-- Navigation tabs -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="control">Control</div>
+        <div class="nav-tab" data-tab="oscilloscope">Monitor</div>
+        <div class="nav-tab" data-tab="settings">Settings</div>
+    </div>
+
+    <div id="start-overlay"><div id="start-overlay-text">START</div></div>
+    <div id="stop-overlay"><div id="stop-overlay-text">STOP</div></div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <!-- Car-style dashboard controls -->
+            <div class="dashboard-controls">
+                <div class="control-group">
+                    <div class="control-label">Channels</div>
+                    <div class="car-dropdown" id="channels-count-dropdown">
+                        <div class="car-dropdown-selected" id="channels-count-selected">
+                            <span class="car-dropdown-value">4</span>
+                            <span class="car-dropdown-arrow">▼</span>
+                        </div>
+                        <div class="car-dropdown-menu" id="channels-count-menu">
+                            <div class="car-dropdown-item" data-value="4">4</div>
+                            <div class="car-dropdown-item" data-value="8">8</div>
+                            <div class="car-dropdown-item" data-value="12">12</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Period</div>
+                    <input type="text" id="period-input" class="car-input">
+                    <span class="unit">mks</span>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Frequency</div>
+                    <input type="text" id="frequency-input" class="car-input">
+                    <span class="unit">Hz</span>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Interlock</div>
+                    <input type="text" id="interlock-input" class="car-input">
+                    <span class="unit">mks</span>
+                </div>
+            </div>
+            
+
+            <!-- Car-style channel controls -->
+            <div class="channels-grid">
+                <!-- Channels will be generated dynamically by JavaScript -->
+            </div>
+
+            <!-- Car-style bottom controls -->
+            <div class="bottom-controls">
+                <div class="control-section">
+                    <div class="recipe-controls">
+                        <button id="load-recipe" class="car-btn secondary">Load Recipe</button>
+                        <button id="save-recipe" class="car-btn secondary">Save Recipe</button>
+                        <button id="preview-recipe" class="car-btn secondary">Preview</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="timer-control">
+                        <label class="car-switch">
+                            <input type="checkbox" id="timer-toggle">
+                            <span class="car-switch-slider"></span>
+                        </label>
+                        <span class="timer-label">Delay Start</span>
+                        <input type="text" id="timer-input" class="car-input">
+                        <span class="timer-unit">mks</span>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="action-buttons">
+                        <button id="start" class="car-btn primary start-btn">START</button>
+                        <button id="stop" class="car-btn danger stop-btn">STOP</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Oscilloscope Panel -->
+    <div id="oscilloscope-panel" class="oscilloscope-panel" style="display: none;">
+        <!-- Oscilloscope Display -->
+        <div class="oscilloscope-display">
+            <div class="waveform-area">
+                <canvas id="oscilloscope-canvas" width="800" height="300"></canvas>
+                <div class="channel-labels" id="oscilloscope-channel-labels">
+                    <!-- Channel labels will be generated dynamically by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Right Sidebar -->
+            <div class="oscilloscope-sidebar">
+                <!-- Oscilloscope Controls -->
+                <div class="oscilloscope-controls">
+                    <button class="oscilloscope-btn" id="autoscale-btn">Autoscale</button>
+                    <button class="oscilloscope-btn" id="undo-autoscale-btn">Undo Autoscale</button>
+                </div>
+                
+                <!-- Individual Channel Controls -->
+                <div class="sidebar-section">
+                    <div class="section-header">Channel Controls</div>
+                    <div class="section-content" id="oscilloscope-channel-controls">
+                        <!-- Channel controls will be generated dynamically by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyzer Controls Panel -->
+        <div class="analyzer-controls">
+            <div class="analyzer-section">
+                <div class="section-title">Time Base</div>
+                <div class="control-group">
+                    <label>Time/Div:</label>
+                    <select id="time-per-div" class="analyzer-select">
+                        <option value="1">1mks/div</option>
+                        <option value="2">2mks/div</option>
+                        <option value="5">5mks/div</option>
+                        <option value="10" selected>10mks/div</option>
+                        <option value="20">20mks/div</option>
+                        <option value="50">50mks/div</option>
+                        <option value="100">100mks/div</option>
+                        <option value="200">200mks/div</option>
+                        <option value="500">500mks/div</option>
+                        <option value="1000">1ms/div</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Position:</label>
+                    <input type="range" id="time-position" class="analyzer-slider" min="-100" max="100" value="0">
+                    <span id="time-position-value">0%</span>
+                </div>
+            </div>
+
+            <div class="analyzer-section">
+                <div class="section-title">Voltage Scale</div>
+                <div class="control-group">
+                    <label>Volt/Div:</label>
+                    <select id="voltage-per-div" class="analyzer-select">
+                        <option value="0.1">0.1V/div</option>
+                        <option value="0.2">0.2V/div</option>
+                        <option value="0.5">0.5V/div</option>
+                        <option value="1" selected>1V/div</option>
+                        <option value="2">2V/div</option>
+                        <option value="5">5V/div</option>
+                        <option value="10">10V/div</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Offset:</label>
+                    <input type="range" id="voltage-offset" class="analyzer-slider" min="-5" max="5" value="0" step="0.1">
+                    <span id="voltage-offset-value">0V</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recipe Save Modal -->
+    <div id="save-recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Recipe</h3>
+                <span class="close" id="close-save-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="recipe-name">Recipe Name:</label>
+                    <input type="text" id="recipe-name" class="modal-input" placeholder="Enter recipe name (optional)">
+                </div>
+                <div class="save-options">
+                    <button id="save-to-server" class="btn-primary">Save to Server</button>
+                    <button id="save-to-file" class="btn-secondary">Download File</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Load Modal -->
+    <div id="load-recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Load Recipe</h3>
+                <span class="close" id="close-load-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="load-options">
+                    <div class="option-group">
+                        <h4>Load from File</h4>
+                        <input type="file" id="file-input" accept=".json" style="display: none;">
+                        <button id="browse-file" class="btn-secondary">Browse File</button>
+                    </div>
+                    <div class="option-group">
+                        <h4>Load from Server</h4>
+                        <div id="server-recipes-list">
+                            <p>Loading recipes...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

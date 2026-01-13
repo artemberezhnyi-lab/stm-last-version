@@ -1,0 +1,2341 @@
+/* =====================
+   Car Dashboard Style PWM Generator
+   ===================== */
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --scale-factor: 1;
+}
+
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+    color: #ffffff;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Transform will be applied by JavaScript when needed */
+}
+
+/* Car-style ambient lighting */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 100, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 100, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(0, 255, 100, 0.05) 0%, transparent 50%);
+    z-index: -1;
+    /* Disabled animation for Raspberry Pi optimization */
+    /* animation: ambientPulse 8s ease-in-out infinite; */
+}
+
+@keyframes ambientPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+}
+
+/* Car header */
+.car-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    border-bottom: 2px solid #333;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.car-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #0066ff, #00ff66, #ff6600, #0066ff);
+    background-size: 200% 100%;
+    /* Disabled animation for Raspberry Pi optimization */
+    /* animation: headerGlow 3s linear infinite; */
+}
+
+@keyframes headerGlow {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.home-icon {
+    font-size: 24px;
+    color: #00ff66;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 100, 255, 0.2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 100, 255, 0.3);
+}
+
+.status-icon {
+    font-size: 16px;
+}
+
+.status-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #00aaff;
+}
+
+.header-center {
+    text-align: center;
+}
+
+.app-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    margin-bottom: 4px;
+}
+
+.app-subtitle {
+    font-size: 14px;
+    color: #888;
+    font-weight: 400;
+}
+
+.time-display {
+    font-size: 24px;
+    font-weight: 600;
+    color: #00ff66;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+    font-family: 'Courier New', monospace;
+}
+
+.temperature-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 100, 0, 0.2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 100, 0, 0.3);
+}
+
+.temp-icon {
+    font-size: 16px;
+}
+
+.temp-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ff6600;
+}
+
+/* Navigation tabs */
+.nav-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid #333;
+    padding: 0 30px;
+}
+
+.nav-tab {
+    padding: 15px 25px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: #888;
+}
+
+.nav-tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab.active {
+    color: #00ff66;
+    border-bottom-color: #00ff66;
+    background: rgba(0, 255, 102, 0.1);
+}
+
+/* Main container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px;
+    position: relative;
+    z-index: 1;
+}
+
+.control-panel {
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Disabled backdrop-filter for Raspberry Pi optimization */
+    /* backdrop-filter: blur(10px); */
+}
+
+/* Dashboard controls */
+.dashboard-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-label {
+    font-size: 14px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.control-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #00ff66;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+}
+
+.car-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    width: 120px;
+    transition: all 0.3s ease;
+}
+
+.car-input:focus {
+    outline: none;
+    border-color: #00ff66;
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.car-select {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    width: 120px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.car-select:focus {
+    outline: none;
+    border-color: #00ff66;
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.car-select option {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* Custom dropdown in app style */
+.car-dropdown {
+    position: relative;
+    width: 120px;
+}
+
+.car-dropdown-selected {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.car-dropdown-selected:hover {
+    border-color: rgba(0, 255, 102, 0.5);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.car-dropdown-selected.active {
+    border-color: #00ff66;
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.car-dropdown-value {
+    flex: 1;
+    text-align: center;
+    color: #00ff66;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+.car-dropdown-arrow {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    transition: transform 0.3s ease;
+    margin-left: 8px;
+}
+
+.car-dropdown-selected.active .car-dropdown-arrow {
+    transform: rotate(180deg);
+    color: #00ff66;
+}
+
+.car-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: rgba(20, 20, 20, 0.95);
+    border: 2px solid rgba(0, 255, 102, 0.3);
+    border-radius: 10px;
+    padding: 5px 0;
+    margin: 0;
+    list-style: none;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(0, 255, 102, 0.2);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.car-dropdown-menu.show {
+    display: block;
+    animation: dropdownFadeIn 0.3s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.car-dropdown-item {
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    line-height: 1.2;
+}
+
+.car-dropdown-item:hover {
+    background: rgba(0, 255, 102, 0.2);
+    color: #00ff66;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+}
+
+.car-dropdown-item.selected {
+    background: rgba(0, 255, 102, 0.3);
+    color: #00ff66;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+}
+
+.unit {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+/* Channels grid */
+.channels-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+    /* Fixed max-height to allow scrolling while keeping channel sizes */
+    max-height: 600px; /* Fixed height - channels keep their size, scroll appears when needed */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px; /* Space for scrollbar */
+    /* Ensure channels don't shrink */
+    align-items: stretch;
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 255, 102, 0.5) rgba(30, 30, 30, 0.5);
+}
+
+/* Custom scrollbar for WebKit browsers */
+.channels-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.channels-grid::-webkit-scrollbar-track {
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 4px;
+}
+
+.channels-grid::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 102, 0.5);
+    border-radius: 4px;
+}
+
+.channels-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 102, 0.7);
+}
+
+.channel-card {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.8) 0%, rgba(40, 40, 40, 0.8) 100%);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0; /* Prevent channels from shrinking - keep their original size */
+    min-height: fit-content; /* Allow natural height */
+}
+
+.channel-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #0066ff, #00ff66);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.channel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    border-color: rgba(0, 255, 102, 0.3);
+}
+
+.channel-card:hover::before {
+    opacity: 1;
+}
+
+.channel-card.disabled {
+    opacity: 0.4;
+    filter: grayscale(0.7);
+}
+
+.channel-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+}
+
+.channel-toggle-container {
+    flex-shrink: 0;
+}
+
+.channel-info {
+    flex: 1;
+}
+
+.channel-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.channel-polarity {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.channel-polarity.negative {
+    background: rgba(255, 0, 0, 0.2);
+    color: #ff6666;
+    border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.channel-polarity.positive {
+    background: rgba(0, 100, 255, 0.2);
+    color: #66aaff;
+    border: 1px solid rgba(0, 100, 255, 0.3);
+}
+
+/* Car-style switches */
+.car-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.car-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.car-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #333 0%, #555 100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.car-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+input:checked + .car-switch-slider {
+    background: linear-gradient(135deg, #00ff66 0%, #00cc55 100%);
+    border-color: rgba(0, 255, 102, 0.5);
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 255, 102, 0.3);
+}
+
+input:checked + .car-switch-slider:before {
+    transform: translateX(30px);
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Channel visual */
+.channel-visual {
+    flex: 2;
+    min-width: 300px;
+}
+
+.pulse-display {
+    position: relative;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pulse-chart {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pulse-value {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    position: relative;
+    outline: none;
+}
+
+/* Channel parameters */
+.channel-params {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    min-width: 300px;
+}
+
+.param-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 60px;
+}
+
+.param-item label {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.param-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.param-input input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 6px 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    width: 100px;
+    transition: all 0.3s ease;
+}
+
+.param-input input:focus {
+    outline: none;
+    border-color: #00ff66;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+}
+
+.param-input .unit {
+    font-size: 10px;
+    color: #888;
+    font-weight: 600;
+    min-width: 20px;
+}
+
+/* Bottom controls */
+.bottom-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.control-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.recipe-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.timer-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timer-label {
+    font-size: 14px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.timer-unit {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+/* Car-style buttons */
+.car-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.car-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+}
+
+.car-btn:hover::before {
+    left: 100%;
+}
+
+.car-btn.primary {
+    background: linear-gradient(135deg, #00ff66 0%, #00cc55 100%);
+    color: #000;
+    border: 2px solid rgba(0, 255, 102, 0.3);
+}
+
+.car-btn.primary:hover {
+    background: linear-gradient(135deg, #00cc55 0%, #00aa44 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 255, 102, 0.4);
+}
+
+.car-btn.danger {
+    background: linear-gradient(135deg, #ff3366 0%, #cc2255 100%);
+    color: #fff;
+    border: 2px solid rgba(255, 51, 102, 0.3);
+}
+
+.car-btn.danger:hover {
+    background: linear-gradient(135deg, #cc2255 0%, #aa1144 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(255, 51, 102, 0.4);
+}
+
+.car-btn.secondary {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.car-btn.secondary:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+}
+
+/* Overlay effects */
+#start-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 255, 102, 0.1);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#start-overlay.active {
+    opacity: 1;
+}
+
+#start-overlay-text {
+    color: #00ff66;
+    font-size: 8vw;
+    font-weight: 900;
+    text-shadow: 0 0 30px rgba(0, 255, 102, 0.8);
+    /* Disabled animation for Raspberry Pi 4 optimization */
+    /* animation: pulseGlow 1s ease-in-out infinite alternate; */
+}
+
+#stop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 51, 102, 0.1);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#stop-overlay.active {
+    opacity: 1;
+}
+
+#stop-overlay-text {
+    color: #ff3366;
+    font-size: 8vw;
+    font-weight: 900;
+    text-shadow: 0 0 30px rgba(255, 51, 102, 0.8);
+    /* Disabled animation for Raspberry Pi 4 optimization */
+    /* animation: pulseGlow 1s ease-in-out infinite alternate; */
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    /* Disabled backdrop-filter for Raspberry Pi optimization */
+    /* backdrop-filter: blur(5px); */
+}
+
+.modal-content {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(40, 40, 40, 0.95) 100%);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Disabled animation for Raspberry Pi 4 optimization */
+    /* animation: modalSlideIn 0.3s ease-out; */
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.close {
+    color: #888;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #888;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #00ff66;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+}
+
+.modal-input {
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: #fff !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+}
+
+.save-options {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00ff66 0%, #00cc55 100%);
+    color: #000;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #00cc55 0%, #00aa44 100%);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.load-options {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.option-group {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.option-group h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.recipe-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.recipe-item:hover {
+    background: rgba(0, 255, 102, 0.1);
+    border-color: rgba(0, 255, 102, 0.3);
+}
+
+.recipe-item:last-child {
+    margin-bottom: 0;
+}
+
+.recipe-info {
+    flex: 1;
+}
+
+.recipe-name {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.recipe-meta {
+    font-size: 12px;
+    color: #888;
+}
+
+.recipe-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-load {
+    background: linear-gradient(135deg, #00ff66 0%, #00cc55 100%);
+    color: #000;
+}
+
+.btn-load:hover {
+    background: linear-gradient(135deg, #00cc55 0%, #00aa44 100%);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #ff3366 0%, #cc2255 100%);
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background: linear-gradient(135deg, #cc2255 0%, #aa1144 100%);
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .channel-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .channel-header {
+        flex-direction: row;
+        justify-content: space-between;
+        min-width: auto;
+    }
+    
+    .channel-params {
+        flex-wrap: wrap;
+        min-width: auto;
+    }
+    
+    .bottom-controls {
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch;
+    }
+    
+    .control-section {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .car-header {
+        padding: 10px 20px;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .header-left, .header-right {
+        gap: 15px;
+    }
+    
+    .app-title {
+        font-size: 24px;
+    }
+    
+    .container {
+        padding: 20px;
+    }
+    
+    .control-panel {
+        padding: 20px;
+    }
+    
+    .dashboard-controls {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .channels-grid {
+        gap: 15px;
+        max-height: 450px; /* Fixed height for smaller screens - channels keep their size */
+    }
+    
+    .channel-card {
+        padding: 15px;
+        flex-direction: column;
+    }
+    
+    .channel-header {
+        flex-direction: row;
+        justify-content: space-between;
+        min-width: auto;
+    }
+    
+    .channel-params {
+        flex-direction: column;
+        gap: 10px;
+        min-width: auto;
+    }
+    
+    .recipe-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .car-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .car-header {
+        padding: 10px 15px;
+    }
+    
+    .app-title {
+        font-size: 20px;
+    }
+    
+    .container {
+        padding: 15px;
+    }
+    
+    .control-panel {
+        padding: 15px;
+    }
+    
+    .dashboard-controls {
+        padding: 15px;
+    }
+    
+    .car-input {
+        width: 100px;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .channels-grid {
+        max-height: 400px; /* Fixed height for mobile screens - channels keep their size */
+        gap: 10px;
+    }
+    
+    .param-input input {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Disabled states */
+.channel-card.disabled .channel-params input,
+.channel-card.disabled .pulse-value {
+    opacity: 0.4;
+    filter: grayscale(0.7);
+}
+
+.channel-card.disabled .channel-name,
+.channel-card.disabled .channel-polarity {
+    opacity: 0.4;
+    filter: grayscale(0.7);
+}
+
+/* Timer control disabled state */
+.timer-control.disabled {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.timer-control.disabled input {
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: #666 !important;
+    border-color: #444 !important;
+    cursor: not-allowed;
+}
+
+.timer-control.disabled label {
+    color: #666 !important;
+}
+
+.timer-control.disabled .timer-unit {
+    color: #666 !important;
+}
+
+/* =====================
+   Oscilloscope Styles
+   ===================== */
+
+.oscilloscope-panel {
+    background: #000;
+    color: #fff;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    max-height: 100vh;
+    min-height: auto; /* Ensure panel takes at least full viewport height */
+    /* Removed max-height to allow panel to expand based on content */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    /* Removed overflow-y to allow content to expand naturally */
+}
+
+.oscilloscope-header {
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.oscilloscope-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.device-info {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.channel-settings {
+    display: flex;
+    gap: 15px;
+}
+
+.channel-setting {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.channel-setting.ch1 { color: #ffff00; }
+.channel-setting.ch2 { color: #00ff00; }
+.channel-setting.ch3 { color: #0080ff; }
+.channel-setting.ch4 { color: #ff00ff; }
+
+.time-settings {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.trigger-status {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.keysight-logo {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.oscilloscope-display {
+    display: flex;
+    flex: 0 0 auto; /* Don't grow, use fixed size */
+    max-height: 60vh; /* Limit height to 60% of viewport */
+    background: #000;
+}
+
+.waveform-area {
+    flex: 1;
+    position: relative;
+    background: #000;
+    border: 1px solid #333;
+    margin: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 60vh; /* Limit height to avoid scrolling */
+}
+
+#oscilloscope-canvas {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: block;
+}
+
+.channel-labels {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    display: flex; /* Hide channel labels from graph */
+    flex-direction: column;
+    gap: 8px; /* Reduced gap to fit 12 channels */
+}
+
+.channel-label {
+    width: 42px; /* Increased to fit two-digit numbers (10-12) */
+    height: 42px; /* Increased to fit two-digit numbers (10-12) */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px; /* Font size for readability */
+    font-weight: 700;
+    color: #000000 !important; /* Black color for channel numbers */
+    border: 2px solid;
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+.channel-label.ch1 {
+    background: #ffff00;
+    border-color: #ffff00;
+    color: #000000 !important; /* Black text on yellow background */
+}
+
+.channel-label.ch2 {
+    background: #00ff00;
+    border-color: #00ff00;
+    color: #000000 !important; /* Black text on green background */
+}
+
+.channel-label.ch3 {
+    background: #0080ff;
+    border-color: #0080ff;
+    color: #000000 !important; /* Black text on blue background */
+}
+
+.channel-label.ch4 {
+    background: #ff00ff;
+    border-color: #ff00ff;
+    color: #000000 !important; /* Black text on magenta background */
+}
+
+.channel-label.ch5 {
+    background: #ff8000;
+    border-color: #ff8000;
+    color: #000000 !important;
+}
+
+.channel-label.ch6 {
+    background: #00ffff;
+    border-color: #00ffff;
+    color: #000000 !important;
+}
+
+.channel-label.ch7 {
+    background: #ff0080;
+    border-color: #ff0080;
+    color: #000000 !important;
+}
+
+.channel-label.ch8 {
+    background: #80ff00;
+    border-color: #80ff00;
+    color: #000000 !important;
+}
+
+.channel-label.ch9 {
+    background: #8000ff;
+    border-color: #8000ff;
+    color: #000000 !important;
+}
+
+.channel-label.ch10 {
+    background: #ff8080;
+    border-color: #ff8080;
+    color: #000000 !important;
+}
+
+.channel-label.ch11 {
+    background: #80ff80;
+    border-color: #80ff80;
+    color: #000000 !important;
+}
+
+.channel-label.ch12 {
+    background: #8080ff;
+    border-color: #8080ff;
+    color: #000000 !important;
+}
+
+.oscilloscope-sidebar {
+    width: 300px; /* Increased from 200px to 300px for better visibility */
+    background: #2a2a2a;
+    padding: 20px;
+    /* Removed border-left to eliminate divider between graph area and sidebar */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: auto;
+    overflow-y: auto;
+}
+
+.sidebar-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: #888;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.section-content > div {
+    font-size: 12px;
+    color: #fff;
+    padding: 4px 0;
+}
+
+.channel-info {
+    font-size: 12px;
+    color: #fff;
+    padding: 4px 0;
+}
+
+.channel-info.ch1 { color: #ffff00; }
+.channel-info.ch2 { color: #00ff00; }
+.channel-info.ch3 { color: #0080ff; }
+.channel-info.ch4 { color: #ff00ff; }
+
+.oscilloscope-controls {
+    background: rgba(0, 0, 0, 0.2); /* Match sidebar section style */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Border at bottom when in sidebar */
+    border-radius: 6px; /* Match sidebar section style */
+    padding: 15px; /* Increased padding for sidebar */
+    margin-bottom: 20px; /* Spacing from Channel Controls */
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0; /* Don't shrink */
+    flex-direction: column; /* Stack buttons vertically in sidebar */
+    max-height: 100%; /* Ensure controls take full height */
+}
+
+/* When oscilloscope-controls is at bottom (old position) */
+.oscilloscope-panel > .oscilloscope-controls {
+    background: #2a2a2a;
+    border-top: 1px solid #333;
+    border-bottom: none;
+    border-radius: 0;
+    padding: 12px 20px;
+    margin-bottom: 0;
+    flex-direction: row; /* Buttons side by side at bottom */
+}
+
+.oscilloscope-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.oscilloscope-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.oscilloscope-btn:active {
+    transform: translateY(0);
+}
+
+/* Grid lines for oscilloscope */
+.oscilloscope-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+.oscilloscope-grid::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Reference lines */
+.oscilloscope-reference {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255, 165, 0, 0.6);
+    border-style: dashed;
+    border-width: 0 0 1px 0;
+    border-color: rgba(255, 165, 0, 0.6);
+}
+
+/* Responsive design for oscilloscope */
+@media (max-width: 1200px) {
+    .oscilloscope-display {
+        flex-direction: column;
+    }
+    
+    .oscilloscope-sidebar {
+        width: 100%;
+        flex-direction: row;
+        padding: 15px;
+    }
+    
+    .sidebar-section {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .oscilloscope-header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .oscilloscope-info {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .channel-settings {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .oscilloscope-controls {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .oscilloscope-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+}
+
+/* =====================
+   Analyzer Controls Styles
+   ===================== */
+
+.analyzer-controls {
+    background: #2a2a2a;
+    border-top: 1px solid #333;
+    padding: 15px; /* Reduced padding */
+    display: flex;
+    gap: 20px; /* Reduced gap */
+    flex-wrap: wrap;
+    min-height: 200px; /* Slightly reduced */
+    overflow-y: auto;
+    flex-shrink: 0; /* Don't shrink */
+    max-width: calc(100% - 300px); /* Limit width to avoid overlapping sidebar (300px) */
+    width: calc(100% - 300px); /* Match waveform area width */
+}
+
+.analyzer-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 18px; /* Increased from 15px for better spacing */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 240px; /* Increased from 200px */
+    flex: 1;
+}
+
+.section-title {
+    font-size: 16px; /* Increased from 14px */
+    font-weight: 700;
+    color: #00ff66;
+    margin-bottom: 12px; /* Increased from 10px */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+    padding-bottom: 8px; /* Increased from 5px */
+}
+
+.control-group {
+    display: flex;
+    align-items: center; /* Vertical alignment */
+    gap: 10px;
+    margin-bottom: 12px; /* Increased from 10px for consistent spacing */
+    flex-wrap: wrap;
+    line-height: 1.5; /* Consistent line height for alignment */
+}
+
+.control-group label {
+    font-size: 14px; /* Increased from 12px */
+    color: #ccc;
+    font-weight: 600;
+    min-width: 80px; /* Increased from 60px */
+    text-align: right;
+    line-height: 24px; /* Match slider height for vertical alignment */
+    height: 24px; /* Fixed height to match slider */
+    display: flex;
+    align-items: center; /* Center text vertically */
+}
+
+.analyzer-select {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px; /* Increased from 4px */
+    color: #fff;
+    padding: 6px 12px; /* Adjusted padding to ensure 24px total height */
+    font-size: 14px; /* Increased from 12px */
+    min-width: 140px; /* Increased from 100px */
+    height: 34px; /* Fixed height to match slider for alignment */
+    line-height: 24px; /* Match height for vertical centering */
+    cursor: pointer;
+    box-sizing: border-box; /* Include padding and border in height */
+}
+
+.analyzer-select:focus {
+    outline: none;
+    border-color: #00ff66;
+    box-shadow: 0 0 5px rgba(0, 255, 102, 0.3);
+}
+
+.analyzer-slider {
+    width: 150px; /* Increased from 100px */
+    height: 24px; /* Increased from 20px */
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px; /* Increased from 10px */
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.analyzer-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; /* Increased from 16px */
+    height: 20px; /* Increased from 16px */
+    background: #00ff66;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+}
+
+.analyzer-slider::-moz-range-thumb {
+    width: 20px; /* Increased from 16px */
+    height: 20px; /* Increased from 16px */
+    background: #00ff66;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+}
+
+/* Styling for analyzer slider values */
+.control-group span {
+    font-size: 13px; /* Increased size for slider values */
+    color: #fff;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+    line-height: 24px; /* Match slider height for vertical alignment */
+    height: 24px; /* Fixed height to match slider */
+    display: flex;
+    align-items: center; /* Center text vertically */
+    justify-content: center; /* Center text horizontally */
+}
+
+/* Responsive design for analyzer */
+@media (max-width: 1200px) {
+    .analyzer-controls {
+        flex-direction: column;
+        max-height: none;
+        gap: 15px;
+        max-width: 100%; /* Full width on smaller screens */
+        width: 100%; /* Full width on smaller screens */
+    }
+    
+    .analyzer-section {
+        min-width: auto;
+    }
+    
+    .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .control-group label {
+        text-align: left;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .analyzer-controls {
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    .analyzer-section {
+        padding: 10px;
+    }
+    
+    .analyzer-slider {
+        width: 120px; /* Increased from 80px for better visibility on mobile */
+    }
+}
+
+/* =====================
+   Channel Controls Styles
+   ===================== */
+
+.channel-controls {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.channel-controls.ch1 {
+    border-left: 3px solid #ffff00;
+}
+
+.channel-controls.ch2 {
+    border-left: 3px solid #00ff00;
+}
+
+.channel-controls.ch3 {
+    border-left: 3px solid #0080ff;
+}
+
+.channel-controls.ch4 {
+    border-left: 3px solid #ff00ff;
+}
+
+.channel-controls.ch5 {
+    border-left: 3px solid #ff8000;
+}
+
+.channel-controls.ch6 {
+    border-left: 3px solid #00ffff;
+}
+
+.channel-controls.ch7 {
+    border-left: 3px solid #ff0080;
+}
+
+.channel-controls.ch8 {
+    border-left: 3px solid #80ff00;
+}
+
+.channel-controls.ch9 {
+    border-left: 3px solid #8000ff;
+}
+
+.channel-controls.ch10 {
+    border-left: 3px solid #ff8080;
+}
+
+.channel-controls.ch11 {
+    border-left: 3px solid #80ff80;
+}
+
+.channel-controls.ch12 {
+    border-left: 3px solid #8080ff;
+}
+
+.channel-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.channel-controls .channel-label {
+    color: #ffffff !important; /* White color for channel labels in Channel Controls */
+}
+
+.channel-controls.ch1 .channel-label {
+    color: #ffff00 !important; /* Yellow for CH1 */
+}
+
+.channel-controls.ch2 .channel-label {
+    color: #00ff00 !important; /* Green for CH2 */
+}
+
+.channel-controls.ch3 .channel-label {
+    color: #0080ff !important; /* Blue for CH3 */
+}
+
+.channel-controls.ch4 .channel-label {
+    color: #ff00ff !important; /* Magenta for CH4 */
+}
+
+.channel-controls.ch5 .channel-label {
+    color: #ff8000 !important; /* Orange for CH5 */
+}
+
+.channel-controls.ch6 .channel-label {
+    color: #00ffff !important; /* Cyan for CH6 */
+}
+
+.channel-controls.ch7 .channel-label {
+    color: #ff0080 !important; /* Pink for CH7 */
+}
+
+.channel-controls.ch8 .channel-label {
+    color: #80ff00 !important; /* Lime for CH8 */
+}
+
+.channel-controls.ch9 .channel-label {
+    color: #8000ff !important; /* Purple for CH9 */
+}
+
+.channel-controls.ch10 .channel-label {
+    color: #ff8080 !important; /* Light pink for CH10 */
+}
+
+.channel-controls.ch11 .channel-label {
+    color: #80ff80 !important; /* Light green for CH11 */
+}
+
+.channel-controls.ch12 .channel-label {
+    color: #8080ff !important; /* Light blue for CH12 */
+}
+
+.channel-controls .control-group {
+    display: flex;
+    align-items: center; /* Vertical alignment */
+    gap: 8px;
+    margin-bottom: 8px; /* Increased from 6px for consistent spacing */
+    flex-wrap: wrap;
+    line-height: 1.5; /* Consistent line height for alignment */
+}
+
+.channel-controls .control-group label {
+    font-size: 14px; /* Increased from 11px */
+    color: #ccc;
+    font-weight: 600;
+    min-width: 70px; /* Increased from 50px */
+    text-align: right;
+    line-height: 24px; /* Match slider height for vertical alignment */
+    height: 24px; /* Fixed height to match slider */
+    display: flex;
+    align-items: center; /* Center text vertically */
+}
+
+.channel-slider {
+    width: 150px; /* Increased from 80px */
+    height: 24px; /* Increased from 16px */
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px; /* Increased from 8px */
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.channel-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; /* Increased from 14px */
+    height: 20px; /* Increased from 14px */
+    background: #00ff66;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(0, 255, 102, 0.5);
+    transition: all 0.2s;
+}
+
+.channel-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 6px rgba(0, 255, 102, 0.7);
+}
+
+.channel-slider::-moz-range-thumb {
+    width: 20px; /* Increased from 14px */
+    height: 20px; /* Increased from 14px */
+    background: #00ff66;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 4px rgba(0, 255, 102, 0.5);
+    transition: all 0.2s;
+}
+
+.channel-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 6px rgba(0, 255, 102, 0.7);
+}
+
+.channel-controls span {
+    font-size: 13px; /* Increased from 10px */
+    color: #00ff66;
+    font-weight: 600;
+    min-width: 40px; /* Increased from 30px */
+    text-align: center;
+    line-height: 24px; /* Match slider height for vertical alignment */
+    height: 24px; /* Fixed height to match slider */
+    display: flex;
+    align-items: center; /* Center text vertically */
+    justify-content: center; /* Center text horizontally */
+}
+
+/* Channel-specific span colors - matching oscilloscope channel colors */
+.channel-controls.ch1 span {
+    color: #ffff00;
+}
+
+.channel-controls.ch2 span {
+    color: #00ff00;
+}
+
+.channel-controls.ch3 span {
+    color: #0080ff;
+}
+
+.channel-controls.ch4 span {
+    color: #ff00ff;
+}
+
+.channel-controls.ch5 span {
+    color: #ff8000;
+}
+
+.channel-controls.ch6 span {
+    color: #00ffff;
+}
+
+.channel-controls.ch7 span {
+    color: #ff0080;
+}
+
+.channel-controls.ch8 span {
+    color: #80ff00;
+}
+
+.channel-controls.ch9 span {
+    color: #8000ff;
+}
+
+.channel-controls.ch10 span {
+    color: #ff8080;
+}
+
+.channel-controls.ch11 span {
+    color: #80ff80;
+}
+
+.channel-controls.ch12 span {
+    color: #8080ff;
+}
+
+/* Channel-specific slider colors - matching oscilloscope channel colors */
+.channel-controls.ch1 .channel-slider::-webkit-slider-thumb {
+    background: #ffff00;
+    box-shadow: 0 0 4px rgba(255, 255, 0, 0.5);
+}
+
+.channel-controls.ch1 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 255, 0, 0.7);
+}
+
+.channel-controls.ch1 .channel-slider::-moz-range-thumb {
+    background: #ffff00;
+    box-shadow: 0 0 4px rgba(255, 255, 0, 0.5);
+}
+
+.channel-controls.ch1 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 255, 0, 0.7);
+}
+
+.channel-controls.ch2 .channel-slider::-webkit-slider-thumb {
+    background: #00ff00;
+    box-shadow: 0 0 4px rgba(0, 255, 0, 0.5);
+}
+
+.channel-controls.ch2 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(0, 255, 0, 0.7);
+}
+
+.channel-controls.ch2 .channel-slider::-moz-range-thumb {
+    background: #00ff00;
+    box-shadow: 0 0 4px rgba(0, 255, 0, 0.5);
+}
+
+.channel-controls.ch2 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(0, 255, 0, 0.7);
+}
+
+.channel-controls.ch3 .channel-slider::-webkit-slider-thumb {
+    background: #0080ff;
+    box-shadow: 0 0 4px rgba(0, 128, 255, 0.5);
+}
+
+.channel-controls.ch3 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(0, 128, 255, 0.7);
+}
+
+.channel-controls.ch3 .channel-slider::-moz-range-thumb {
+    background: #0080ff;
+    box-shadow: 0 0 4px rgba(0, 128, 255, 0.5);
+}
+
+.channel-controls.ch3 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(0, 128, 255, 0.7);
+}
+
+.channel-controls.ch4 .channel-slider::-webkit-slider-thumb {
+    background: #ff00ff;
+    box-shadow: 0 0 4px rgba(255, 0, 255, 0.5);
+}
+
+.channel-controls.ch4 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 0, 255, 0.7);
+}
+
+.channel-controls.ch4 .channel-slider::-moz-range-thumb {
+    background: #ff00ff;
+    box-shadow: 0 0 4px rgba(255, 0, 255, 0.5);
+}
+
+.channel-controls.ch4 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 0, 255, 0.7);
+}
+
+/* Channel 5 - Orange */
+.channel-controls.ch5 .channel-slider::-webkit-slider-thumb {
+    background: #ff8000;
+    box-shadow: 0 0 4px rgba(255, 128, 0, 0.5);
+}
+
+.channel-controls.ch5 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 128, 0, 0.7);
+}
+
+.channel-controls.ch5 .channel-slider::-moz-range-thumb {
+    background: #ff8000;
+    box-shadow: 0 0 4px rgba(255, 128, 0, 0.5);
+}
+
+.channel-controls.ch5 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 128, 0, 0.7);
+}
+
+/* Channel 6 - Cyan */
+.channel-controls.ch6 .channel-slider::-webkit-slider-thumb {
+    background: #00ffff;
+    box-shadow: 0 0 4px rgba(0, 255, 255, 0.5);
+}
+
+.channel-controls.ch6 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(0, 255, 255, 0.7);
+}
+
+.channel-controls.ch6 .channel-slider::-moz-range-thumb {
+    background: #00ffff;
+    box-shadow: 0 0 4px rgba(0, 255, 255, 0.5);
+}
+
+.channel-controls.ch6 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(0, 255, 255, 0.7);
+}
+
+/* Channel 7 - Pink */
+.channel-controls.ch7 .channel-slider::-webkit-slider-thumb {
+    background: #ff0080;
+    box-shadow: 0 0 4px rgba(255, 0, 128, 0.5);
+}
+
+.channel-controls.ch7 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 0, 128, 0.7);
+}
+
+.channel-controls.ch7 .channel-slider::-moz-range-thumb {
+    background: #ff0080;
+    box-shadow: 0 0 4px rgba(255, 0, 128, 0.5);
+}
+
+.channel-controls.ch7 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 0, 128, 0.7);
+}
+
+/* Channel 8 - Lime */
+.channel-controls.ch8 .channel-slider::-webkit-slider-thumb {
+    background: #80ff00;
+    box-shadow: 0 0 4px rgba(128, 255, 0, 0.5);
+}
+
+.channel-controls.ch8 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 255, 0, 0.7);
+}
+
+.channel-controls.ch8 .channel-slider::-moz-range-thumb {
+    background: #80ff00;
+    box-shadow: 0 0 4px rgba(128, 255, 0, 0.5);
+}
+
+.channel-controls.ch8 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 255, 0, 0.7);
+}
+
+/* Channel 9 - Purple */
+.channel-controls.ch9 .channel-slider::-webkit-slider-thumb {
+    background: #8000ff;
+    box-shadow: 0 0 4px rgba(128, 0, 255, 0.5);
+}
+
+.channel-controls.ch9 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 0, 255, 0.7);
+}
+
+.channel-controls.ch9 .channel-slider::-moz-range-thumb {
+    background: #8000ff;
+    box-shadow: 0 0 4px rgba(128, 0, 255, 0.5);
+}
+
+.channel-controls.ch9 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 0, 255, 0.7);
+}
+
+/* Channel 10 - Light Pink */
+.channel-controls.ch10 .channel-slider::-webkit-slider-thumb {
+    background: #ff8080;
+    box-shadow: 0 0 4px rgba(255, 128, 128, 0.5);
+}
+
+.channel-controls.ch10 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 128, 128, 0.7);
+}
+
+.channel-controls.ch10 .channel-slider::-moz-range-thumb {
+    background: #ff8080;
+    box-shadow: 0 0 4px rgba(255, 128, 128, 0.5);
+}
+
+.channel-controls.ch10 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(255, 128, 128, 0.7);
+}
+
+/* Channel 11 - Light Green */
+.channel-controls.ch11 .channel-slider::-webkit-slider-thumb {
+    background: #80ff80;
+    box-shadow: 0 0 4px rgba(128, 255, 128, 0.5);
+}
+
+.channel-controls.ch11 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 255, 128, 0.7);
+}
+
+.channel-controls.ch11 .channel-slider::-moz-range-thumb {
+    background: #80ff80;
+    box-shadow: 0 0 4px rgba(128, 255, 128, 0.5);
+}
+
+.channel-controls.ch11 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 255, 128, 0.7);
+}
+
+/* Channel 12 - Light Blue */
+.channel-controls.ch12 .channel-slider::-webkit-slider-thumb {
+    background: #8080ff;
+    box-shadow: 0 0 4px rgba(128, 128, 255, 0.5);
+}
+
+.channel-controls.ch12 .channel-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 128, 255, 0.7);
+}
+
+.channel-controls.ch12 .channel-slider::-moz-range-thumb {
+    background: #8080ff;
+    box-shadow: 0 0 4px rgba(128, 128, 255, 0.5);
+}
+
+.channel-controls.ch12 .channel-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 6px rgba(128, 128, 255, 0.7);
+}
+
+/* Responsive design for channel controls */
+@media (max-width: 1200px) {
+    .channel-controls .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .channel-controls .control-group label {
+        text-align: left;
+        min-width: auto;
+    }
+    
+    .channel-slider {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .channel-controls {
+        padding: 8px;
+    }
+    
+    .channel-controls .control-group {
+        margin-bottom: 4px;
+    }
+    
+    .channel-slider {
+        width: 120px; /* Increased from 70px for better visibility on mobile */
+    }
+}

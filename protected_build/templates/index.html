@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWM Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="author" content="PWM Solutions">
+    <meta name="description" content="Professional PWM Generator Application">
+</head>
+<body>
+    <!-- Car-style header with status indicators -->
+    <div class="car-header">
+        <div class="header-left">
+        </div>
+        <div class="header-center">
+            <div class="app-title">PWM Generator</div>
+            <div class="app-subtitle">Pulse Width Modulation Control</div>
+        </div>
+        <div class="header-right">
+        </div>
+    </div>
+
+    <!-- Navigation tabs -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="control">Control</div>
+        <div class="nav-tab" data-tab="monitor">Monitor</div>
+        <div class="nav-tab" data-tab="settings">Settings</div>
+    </div>
+
+    <div id="start-overlay"><div id="start-overlay-text">START</div></div>
+    <div id="stop-overlay"><div id="stop-overlay-text">STOP</div></div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <!-- Car-style dashboard controls -->
+            <div class="dashboard-controls">
+                <div class="control-group">
+                    <div class="control-label">Channels</div>
+                    <div class="control-value">4</div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Period</div>
+                    <input type="text" id="period-input" class="car-input">
+                    <span class="unit">mks</span>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Frequency</div>
+                    <input type="text" id="frequency-input" class="car-input">
+                    <span class="unit">Hz</span>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Interlock</div>
+                    <input type="text" id="interlock-input" class="car-input">
+                    <span class="unit">mks</span>
+                </div>
+            </div>
+            
+
+            <!-- Car-style channel controls -->
+            <div class="channels-grid">
+                {% for i in range(4) %}
+                    <div class="channel-card" data-channel="{{ i + 1 }}">
+                        <div class="channel-header">
+                            <div class="channel-toggle-container">
+                                <label class="car-switch">
+                                    <input type="checkbox" class="channel-toggle" data-channel="{{ i + 1 }}" checked>
+                                    <span class="car-switch-slider"></span>
+                                </label>
+                            </div>
+                            <div class="channel-info">
+                                <div class="channel-name">Channel {{ i + 1 }}</div>
+                                {% if i % 2 == 0 %}
+                                    <div class="channel-polarity negative">Negative</div>
+                                {% endif %}
+                                {% if i % 2 == 1 %}
+                                    <div class="channel-polarity positive">Positive</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="channel-visual">
+                            <div class="pulse-display" data-channel="{{ i + 1 }}">
+                                <canvas class="pulse-chart" data-channel="{{ i + 1 }}" width="120" height="44"></canvas>
+                                <input type="text" class="pulse-value" data-channel="{{ i + 1 }}" readonly>
+                            </div>
+                        </div>
+                        <div class="channel-params">
+                            <div class="param-item">
+                                <label>Pulse Width</label>
+                                <div class="param-input">
+                                    <input type="text" class="pulse-width-input" data-channel="{{ i + 1 }}">
+                                    <span class="unit">mks</span>
+                                </div>
+                            </div>
+                            <div class="param-item">
+                                <label>Offset</label>
+                                <div class="param-input">
+                                    <input type="text" class="offset-input" data-channel="{{ i + 1 }}">
+                                    <span class="unit">mks</span>
+                                </div>
+                            </div>
+                            <div class="param-item">
+                                <label>Power</label>
+                                <div class="param-input">
+                                    <input type="text" class="power-input" data-channel="{{ i + 1 }}">
+                                    <span class="unit">W</span>
+                                </div>
+                            </div>
+                            <div class="param-item">
+                                <label>Voltage</label>
+                                <div class="param-input">
+                                    <input type="text" class="voltage-input" data-channel="{{ i + 1 }}">
+                                    <span class="unit">V</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Car-style bottom controls -->
+            <div class="bottom-controls">
+                <div class="control-section">
+                    <div class="recipe-controls">
+                        <button id="load-recipe" class="car-btn secondary">Load Recipe</button>
+                        <button id="save-recipe" class="car-btn secondary">Save Recipe</button>
+                        <button id="preview-recipe" class="car-btn secondary">Preview</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="timer-control">
+                        <label class="car-switch">
+                            <input type="checkbox" id="timer-toggle">
+                            <span class="car-switch-slider"></span>
+                        </label>
+                        <span class="timer-label">Delay Start</span>
+                        <input type="text" id="timer-input" class="car-input">
+                        <span class="timer-unit">mks</span>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="action-buttons">
+                        <button id="start" class="car-btn primary start-btn">START</button>
+                        <button id="stop" class="car-btn danger stop-btn">STOP</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recipe Save Modal -->
+    <div id="save-recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Recipe</h3>
+                <span class="close" id="close-save-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="recipe-name">Recipe Name:</label>
+                    <input type="text" id="recipe-name" class="modal-input" placeholder="Enter recipe name (optional)">
+                </div>
+                <div class="save-options">
+                    <button id="save-to-server" class="btn-primary">Save to Server</button>
+                    <button id="save-to-file" class="btn-secondary">Download File</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Load Modal -->
+    <div id="load-recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Load Recipe</h3>
+                <span class="close" id="close-load-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="load-options">
+                    <div class="option-group">
+                        <h4>Load from File</h4>
+                        <input type="file" id="file-input" accept=".json" style="display: none;">
+                        <button id="browse-file" class="btn-secondary">Browse File</button>
+                    </div>
+                    <div class="option-group">
+                        <h4>Load from Server</h4>
+                        <div id="server-recipes-list">
+                            <p>Loading recipes...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

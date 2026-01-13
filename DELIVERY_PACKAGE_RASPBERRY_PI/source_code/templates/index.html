@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="author" content="PWM Solutions">
+    <meta name="description" content="Professional PWM Generator Application">
+</head>
+<body><div id="start-overlay"><div id="start-overlay-text">START</div></div>
+        <div id="stop-overlay"><div id="stop-overlay-text">STOP</div></div>
+    <div class="container">
+        <div class="control-panel">
+            <div class="top-controls">
+                <div class="channel-count">
+                    <span>Channel count</span>
+                    <div class="count-value">4</div>
+                </div>
+                <div class="port-controls">
+                    <label>COM Port</label>
+                    <input type="text" id="port-select" placeholder="1-30" min="1" max="30" value="/dev/serial0">
+                </div>
+                <div class="period-controls">
+                    <label>Period</label>
+                    <input type="text" id="period-input">
+                    <span class="unit">mks</span>
+                </div>
+                <div class="frequency-controls">
+                    <label>Frequency</label>
+                    <input type="text" id="frequency-input">
+                    <span class="unit">Hz</span>
+                </div>
+                <div class="interlock-controls">
+                    <label>Interlock</label>
+                    <input type="text" id="interlock-input">
+                    <span class="unit">mks</span>
+                </div>
+            </div>
+            
+
+            <!-- Channels Rows -->
+            <div class="channels-rows">
+                {% for i in range(4) %}
+                    <div class="channel-row">
+                        <label class="switch">
+                            <input type="checkbox" class="channel-toggle" data-channel="{{ i + 1 }}" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <div class="channel-label-block">
+                            <span class="channel-label">Channel {{ i + 1 }}</span>
+                            {% if i % 2 == 0 %}
+                                <div class="channel-negative" style="font-size: 0.8em; margin-bottom: 4px;">
+                                    <span style="color: #000;">(</span><span style="color: #e91e1e;">negative</span><span style="color: #000;">)</span>
+                                </div>
+                            {% endif %}
+                            {% if i % 2 == 1 %}
+                                <div class="channel-positive" style="font-size: 0.8em; margin-bottom: 2px;">
+                                    <span style="color: #000;">(</span><span style="color: #4c5baf;">positive</span><span style="color: #000;">)</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="main-channel-input" data-channel="{{ i + 1 }}">
+                            <canvas class="pulse-chart" data-channel="{{ i + 1 }}" width="120" height="44" style="position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none;"></canvas>
+                            <input type="text" readonly style="position:relative; background:transparent; border:none; width:100%; height:100%; z-index:1; text-align:center; font-size:20px; outline:none;" data-channel="{{ i + 1 }}">
+                        </div>
+                        <div class="channel-param-group">
+                            <div class="param-label">Pulse width</div>
+                            <div class="param-input-wrap">
+                                <input type="text" class="pulse-width-input" data-channel="{{ i + 1 }}">
+                                <span class="unit">mks</span>
+                            </div>
+                        </div>
+                        <div class="channel-param-group">
+                            <div class="param-label">Offset</div>
+                            <div class="param-input-wrap">
+                                <input type="text" class="offset-input" data-channel="{{ i + 1 }}">
+                                <span class="unit">mks</span>
+                            </div>
+                        </div>
+                        <div class="channel-param-group">
+                            <div class="param-label">Power</div>
+                            <div class="param-input-wrap">
+                                <input type="text" class="power-input" data-channel="{{ i + 1 }}">
+                                <span class="unit">W</span>
+                            </div>
+                        </div>
+                        <div class="channel-param-group">
+                            <div class="param-label">Voltage</div>
+                            <div class="param-input-wrap">
+                                <input type="text" class="voltage-input" data-channel="{{ i + 1 }}">
+                                <span class="unit">V</span>
+                            </div>
+                        </div>
+                        <!-- [<div class="channel-param-group interlock-group">
+                            <div class="interlock-row" style="display: flex; align-items: flex-start; gap: 20px;">
+                                <div class="slider-col" style="display: flex; flex-direction: column; align-items: flex-start;">
+                                    <div class="slider-text" style="display: flex; align-items: center; gap: 10px;">
+                                        <label class="switch">
+                                            <input type="checkbox" class="interlock-toggle" data-channel="{{ i + 1 }}" checked>
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                        <span class="interlock-label">Interlock</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span class="channels-label">Channels</span>
+                                        <div class="channels-dropdown-wrapper">
+                                            <div class="channels-dropdown-selected" tabindex="0">
+                                                <span class="channels-dropdown-values">2,3,4</span>
+                                            </div>
+                                            <div class="channels-dropdown-list">
+                                                <label class="channels-dropdown-item"><input type="checkbox" checked> <span>2</span></label>
+                                                <label class="channels-dropdown-item"><input type="checkbox" checked> <span>3</span></label>
+                                                <label class="channels-dropdown-item"><input type="checkbox" checked> <span>4</span></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="channels-buttons-group">
+                                    <button type="button" class="channels-btn all-btn">All</button>
+                                    <button type="button" class="channels-btn none-btn">None</button>
+                                </div>
+                            </div>
+                        </div>] -->
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="bottom-controls">
+                <div class="recipe-controls">
+                    <button id="load-recipe">Load recipe</button>
+                    <button id="save-recipe">Save recipe</button>
+                    <button id="preview-recipe">Preview</button>
+                </div>
+
+                <div class="timer-control">
+                    <label class="switch">
+                        <input type="checkbox" id="timer-toggle">
+                        <span class="switch-slider"></span>
+                    </label>
+                    <label>Delay start</label>
+                    <input type="text" id="timer-input">
+                    <span class="timer-unit">ms</span>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="start" class="btn-start">Start</button>
+                    <button id="stop" class="btn-stop">Stop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recipe Save Modal -->
+    <div id="save-recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Recipe</h3>
+                <span class="close" id="close-save-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="recipe-name">Recipe Name:</label>
+                    <input type="text" id="recipe-name" class="modal-input" placeholder="Enter recipe name (optional)">
+                </div>
+                <div class="save-options">
+                    <button id="save-to-server" class="btn-primary">Save to Server</button>
+                    <button id="save-to-file" class="btn-secondary">Download File</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Load Modal -->
+    <div id="load-recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Load Recipe</h3>
+                <span class="close" id="close-load-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="load-options">
+                    <div class="option-group">
+                        <h4>Load from File</h4>
+                        <input type="file" id="file-input" accept=".json" style="display: none;">
+                        <button id="browse-file" class="btn-secondary">Browse File</button>
+                    </div>
+                    <div class="option-group">
+                        <h4>Load from Server</h4>
+                        <div id="server-recipes-list">
+                            <p>Loading recipes...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
